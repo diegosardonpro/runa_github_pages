@@ -45,7 +45,7 @@ def classify_url_type(url: str, logger) -> str | None:
 # --- PASO 2: EXTRACCIÓN ESPECIALIZADA ---
 
 def get_article_extraction_prompt(url: str) -> str:
-    """Retorna el prompt para extraer metadatos de un artículo."""
+    """Retorna el prompt para extraer metadatos y enlaces de un artículo."""
     return (
         f'''Actúa como un curador de activos experto. Analiza el contenido de la siguiente URL, que ha sido clasificada como ARTICULO_TEXTO, y devuelve un único objeto JSON con la siguiente estructura. La respuesta debe ser solo el JSON, sin texto introductorio ni markdown.
 
@@ -57,7 +57,11 @@ Estructura JSON requerida:
   "resumen": "(Un resumen conciso del contenido)",
   "contenido_html": "(El texto completo del artículo, formateado en párrafos HTML)",
   "tags": "(Una cadena de 5 a 7 palabras clave relevantes, separadas por comas)",
-  "url_imagen_extraida": "(La URL completa de la imagen principal. Si no hay, devuelve null)"
+  "url_imagen_extraida": "(La URL completa de la imagen principal. Si no hay, devuelve null)",
+  "enlaces": [
+    {{ "url_enlace": "(La URL completa del primer enlace encontrado en el texto)", "texto_ancla": "(El texto visible del primer enlace)", "tipo_enlace": "(Clasificar como IMAGEN, EXTERNO o INTERNO)" }},
+    {{ "url_enlace": "(La URL completa del segundo enlace)", "texto_ancla": "(El texto visible del segundo enlace)", "tipo_enlace": "(...) }}
+  ]
 }}
 '''
     )

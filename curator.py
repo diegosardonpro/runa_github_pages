@@ -54,20 +54,28 @@ def main():
 
                 # --- 3c. Procesamiento especializado según el tipo ---
                 if asset_type == 'ARTICULO_TEXTO':
+                    # Extraer metadatos y enlaces
                     metadata = content_processor.extract_article_metadata(url, log)
                     if not metadata:
                         raise ValueError("La extracción de metadatos del artículo falló.")
                     
-                    # Guardar metadatos especializados
+                    # La IA devuelve los enlaces en una clave separada
+                    links_data = metadata.pop('enlaces', None)
+                    
+                    # Guardar metadatos principales del artículo
                     db_manager.save_article_metadata(supabase, log, master_asset_id, metadata)
+
+                    # Guardar enlaces extraídos en su propia tabla
+                    if links_data:
+                        db_manager.save_extracted_links(supabase, log, master_asset_id, links_data)
 
                     # Descargar imagen asociada al artículo
                     image_url = metadata.get('url_imagen_extraida')
                     local_image_path = content_processor.download_image(image_url, master_asset_id, IMAGES_OUTPUT_DIR, log)
                     if local_image_path:
                         # Actualizar la tabla de metadatos con la ruta local
-                        supabase.table(db_manager.METADATA_ARTICLES_TABLE)\
-                            .update({'ruta_imagen_local': local_image_path})\
+                        supabase.table(db_manager.METADATA_ARTICLES_TABLE)
+                            .update({'ruta_imagen_local': local_image_path})
                             .eq('asset_id', master_asset_id).execute()
 
                 # --- 3d. Finalizar y marcar como completado ---
