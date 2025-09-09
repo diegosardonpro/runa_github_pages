@@ -21,47 +21,38 @@ El sistema ha evolucionado a una arquitectura de base de datos normalizada y un 
 
 - **`src/content_processor.py` (Cerebro de IA Especializado):** Contiene la lógica para el proceso de dos pasos: una función para **clasificar** y funciones especializadas para **extraer** metadatos de cada tipo de activo, cada una con su propio prompt optimizado.
 
+## Estado Actual del Sistema (Hito v3.0)
+
+Tras un ciclo de refactorización y depuración intensivo, el sistema ha alcanzado un estado de **Producto Mínimo Viable (MVP)**, robusto y funcional.
+
+- **Éxito Funcional:** El motor principal para procesar activos de tipo `ARTICULO_TEXTO` está 100% operativo. El sistema clasifica, extrae, guarda en la nueva estructura relacional y descarga la imagen asociada.
+- **Manejo Inteligente de Tipos:** El sistema es capaz de clasificar diferentes tipos de activos (ej. `VIDEO`) y marcarlos como no soportados sin detener la ejecución, demostrando la resiliencia del orquestador.
+- **Limitación Conocida (Resiliencia):** Se ha observado que la IA puede, en ocasiones, proporcionar URLs de imágenes que ya no existen (resultando en un error `404 Not Found`). El sistema actual es robusto ante este fallo: registra el error en el log, pero completa exitosamente la curación del resto de los metadatos del artículo. No se considera un bug del código, sino una característica del comportamiento de la IA que manejamos correctamente.
+
 ## Flujo de Trabajo de Curación (v3.0)
 
 1.  **Entrada:** Se añade una URL a la tabla `urls_para_procesar`.
 2.  **Ejecución:** El workflow de GitHub Actions ejecuta `curator.py`.
-3.  **Clasificación:** La IA determina el tipo de activo de la URL (ej. `ARTICULO_TEXTO`).
-4.  **Extracción Especializada:** Se invoca la función de procesamiento correspondiente al tipo de activo, usando un prompt específico para extraer los metadatos relevantes.
-5.  **Almacenamiento Relacional:** Los datos se guardan de forma estructurada: un registro en `activos` y los metadatos correspondientes en `metadata_articulos` (o la tabla que corresponda).
-6.  **Salida:** Una base de datos normalizada de activos curados, clasificados y con metadatos de alta calidad.
+3.  **Clasificación:** La IA determina el tipo de activo de la URL.
+4.  **Extracción Especializada:** Se invoca la función de procesamiento correspondiente.
+5.  **Almacenamiento Relacional:** Los datos se guardan en las tablas `activos` y `metadata_articulos`.
 
 ## Herramientas de Utilidad
 
 ### `download_all_images.py`
 
 **Propósito:**
-Esta herramienta sirve para descargar en lote las imágenes de todos los activos de tipo artículo que ya han sido curados. Es ideal para preparar el lanzamiento de una web o para análisis de imágenes locales.
+Descargar en lote las imágenes de todos los activos de tipo artículo ya curados.
 
 **Uso:**
 ```bash
-# Desde la carpeta raíz del proyecto (runa_github_pages)
 python download_all_images.py
 ```
 
 ## Configuración y Uso del Workflow
 
-1.  **¡IMPORTANTE! Migración a v3.0:** Esta versión introduce cambios estructurales en la base de datos. Antes de la primera ejecución, debes limpiar las tablas antiguas para permitir que la nueva estructura se cree correctamente. Conéctate a tu base de datos de Supabase y ejecuta el siguiente script SQL:
+1.  **¡IMPORTANTE! Migración a v3.0:** Antes de la primera ejecución, debes limpiar las tablas antiguas con el script SQL proporcionado.
 
-    ```sql
-    -- Script de limpieza para la transición a v3.0
-    -- Elimina la tabla dependiente primero para evitar errores.
-    DROP TABLE IF EXISTS public.encuestas_anonimas;
+2.  **Secretos de GitHub:** `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `GEMINI_API_KEY`.
 
-    -- Elimina las tablas de la arquitectura v2.0 y v3.0 para un inicio limpio.
-    DROP TABLE IF EXISTS public.metadata_articulos;
-    DROP TABLE IF EXISTS public.metadata_imagenes;
-    DROP TABLE IF EXISTS public.activos_curados; -- Tabla antigua
-    DROP TABLE IF EXISTS public.activos;       -- Nueva tabla central
-    ```
-
-2.  **Secretos de GitHub:** Asegúrate de que los siguientes secretos están configurados en tu repositorio:
-    *   `SUPABASE_URL`
-    *   `SUPABASE_SERVICE_KEY`
-    *   `GEMINI_API_KEY`
-
-3.  **Ejecución:** Para procesar nuevas URLs, activa el workflow "Curador de Activos" desde la pestaña "Actions" de tu repositorio.
+3.  **Ejecución:** Activa el workflow "Curador de Activos" desde la pestaña "Actions" de tu repositorio.
