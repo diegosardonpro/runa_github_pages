@@ -1,6 +1,7 @@
 # src/content_processor.py
 import os
 import json
+import requests
 from typing import Union
 import google.generativeai as genai
 
@@ -73,4 +74,37 @@ def process_url_with_ai(url: str, logger) -> Union[dict, None]:
     except Exception as e:
         logger.error(f"Error al parsear la respuesta JSON de la IA: {e}")
         logger.error(f"Respuesta recibida del modelo que causó el error: {response.text}")
+        return None
+
+def download_image(image_url: str, asset_id: int, output_dir: str, logger) -> Union[str, None]:
+    """Descarga una imagen desde una URL y la guarda localmente."""
+    if not image_url:
+        logger.warning("No se proporcionó URL de imagen para descargar.")
+        return None
+    logger.info(f"Iniciando descarga de imagen: {image_url}")
+    try:
+        response = requests.get(image_url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+        response.raise_for_status()
+        
+        content_type = response.headers.get('content-type')
+        if content_type and 'png' in content_type:
+            ext = '.png'
+        elif content_type and 'gif' in content_type:
+            ext = '.gif'
+        elif content_type and 'webp' in content_type:
+            ext = '.webp'
+        else:
+            ext = '.jpg'
+
+        os.makedirs(output_dir, exist_ok=True)
+        local_path = os.path.join(output_dir, f"{asset_id}{ext}")
+        
+        with open(local_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        logger.info(f"Imagen guardada exitosamente en: {local_path}")
+        return local_path
+    except Exception as e:
+        logger.error(f"Error al descargar la imagen {image_url}: {e}", exc_info=True)
         return None
