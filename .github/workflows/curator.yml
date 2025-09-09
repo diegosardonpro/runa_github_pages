@@ -1,4 +1,4 @@
-# Workflow para el Curador de Activos Digitales de Runa (v2.0)
+# Workflow para el Curador de Activos Digitales de Runa (v3.0)
 
 name: Curador de Activos
 
@@ -35,7 +35,8 @@ jobs:
 
       - name: Ejecutar el script curador
         env:
-          # Pasamos los únicos dos secretos que el nuevo script necesita
+          # Pasamos los TRES secretos que la arquitectura dual necesita
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
         run: python curator.py

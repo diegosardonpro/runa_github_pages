@@ -41,6 +41,21 @@ Este marco es un documento vivo y guiará todas nuestras decisiones técnicas fu
 
 ---
 
+## 5. Decisiones de Arquitectura y Pivotes Técnicos
+
+Esta sección documenta las decisiones técnicas clave y los pivotes realizados durante el desarrollo, incluyendo el razonamiento detrás de ellos.
+
+### 5.1. Método de Conexión a Supabase: El Pivote a la Arquitectura Dual
+
+*   **Contexto:** Durante el desarrollo inicial, se encontraron errores de conectividad persistentes (`Network is unreachable`) al intentar ejecutar comandos de infraestructura (`CREATE TABLE`) desde el entorno de GitHub Actions hacia la base de datos de Supabase.
+*   **Iteración 1 (Fallida):** Se intentó unificar todas las interacciones con la base de datos a través de una sola librería (`supabase-py`). Esta aproximación falló porque dicha librería, por diseño y seguridad, es una cliente de datos (DML) y no tiene la capacidad de ejecutar comandos de modificación de esquema (DDL) de forma directa y robusta.
+*   **Decisión Estratégica (La Solución Actual):** Se tomó la decisión de implementar una **arquitectura de conexión dual**, reconociendo la naturaleza distinta de las tareas de infraestructura y las de contenido.
+    *   **Componente 1 (Infraestructura - DDL):** Para tareas de alta sensibilidad que modifican la estructura de la base de datos, se utiliza una conexión directa vía `psycopg2` autenticada con la cadena de conexión del "Pooler" (`SUPABASE_CONNECTION_STRING`). Este método es robusto y está diseñado para este tipo de operaciones.
+    *   **Componente 2 (Contenido - DML):** Para las operaciones diarias de lectura y escritura de datos, se utiliza la librería oficial `supabase-py`, autenticada con `SUPABASE_URL` y `SUPABASE_SERVICE_KEY`. Este método es más seguro para la manipulación de datos y aprovecha las abstracciones de la API de Supabase.
+*   **Conclusión:** Este "vaivén" en la implementación no representa un error, sino un **proceso de descubrimiento iterativo** que nos llevó a una solución más segura, resiliente y técnicamente correcta, alineada con las mejores prácticas para interactuar con servicios de base de datos gestionados.
+
+---
+
 ## 4. Análisis de Plataformas y Proveedores
 
 Esta sección documenta nuestro análisis de las políticas y límites de las tecnologías de terceros que utilizamos, asegurando que se alineen con nuestros principios.
