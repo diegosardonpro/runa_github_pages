@@ -1,4 +1,4 @@
-# Runa - Sistema de Curación de Activos Digitales
+# Runa - Sistema de Curación de Activos Digitales (v3.0)
 
 Este repositorio contiene el motor de automatización para el proyecto Runa, una iniciativa dedicada a visibilizar y combatir la desigualdad a través del análisis de información y la promoción de los derechos humanos y ambientales.
 
@@ -6,43 +6,38 @@ Este repositorio contiene el motor de automatización para el proyecto Runa, una
 
 El objetivo de este sistema no es solo tecnológico, sino social. Busca proporcionar las herramientas para una "Investigación Anfibia", integrando y analizando información de diversas fuentes para apoyar la toma de decisiones, fortalecer la participación ciudadana y amplificar las voces de comunidades vulnerables, todo ello guiado por un estricto **[Marco Ético](MARCO_ETICO.md)**.
 
-## Arquitectura del Sistema (v2.0 - Modular)
+## Arquitectura del Sistema (v3.0 - Normalizada)
 
-El sistema opera bajo una arquitectura modular y desacoplada para gestionar la complejidad y facilitar el mantenimiento.
+El sistema ha evolucionado a una arquitectura de base de datos normalizada y un procesamiento de IA en dos fases para maximizar la escalabilidad, la calidad del dato y la mantenibilidad.
 
-- **`curator.py` (El Orquestador):** Es el punto de entrada y el director de orquesta. No contiene lógica de negocio compleja. Su única tarea es llamar a los módulos especializados en el orden correcto para procesar URLs de artículos.
+- **Base de Datos Relacional:** Hemos abandonado la tabla única en favor de un schema profesional:
+    - **`activos`:** Una tabla central que registra cada activo y su tipo (ej. `ARTICULO_TEXTO`).
+    - **`metadata_articulos`:** Una tabla especializada que guarda la información extraída de artículos (título, resumen, etc.), vinculada a la tabla `activos`.
+    - **`metadata_imagenes`:** Preparada para el futuro, guardará información específica de activos de imagen.
 
-- **`src/db_manager.py` (El Guardián de la Base de Datos):** Encapsula toda la interacción con la base de datos de Supabase. Gestiona tanto la creación de la infraestructura (tablas, funciones) como las operaciones de datos del día a día (leer, insertar, actualizar).
+- **`curator.py` (Orquestador Inteligente):** Dirige el flujo de trabajo. Primero pide a la IA que clasifique el tipo de activo de una URL y luego invoca al módulo de procesamiento correcto para ese tipo.
 
-- **`src/content_processor.py` (El Cerebro de IA):** Contiene la lógica de procesamiento de contenido. Esto incluye el web scraping para extraer datos de una URL, el enriquecimiento del texto usando la API de Gemini, y la gestión de activos como la descarga de imágenes.
+- **`src/db_manager.py` (Guardián de la Base de Datos):** Encapsula toda la lógica de la nueva estructura de base de datos, incluyendo la creación del schema y las funciones para guardar datos en las tablas relacionadas.
 
-## Flujo de Trabajo de Curación
+- **`src/content_processor.py` (Cerebro de IA Especializado):** Contiene la lógica para el proceso de dos pasos: una función para **clasificar** y funciones especializadas para **extraer** metadatos de cada tipo de activo, cada una con su propio prompt optimizado.
+
+## Flujo de Trabajo de Curación (v3.0)
 
 1.  **Entrada:** Se añade una URL a la tabla `urls_para_procesar`.
 2.  **Ejecución:** El workflow de GitHub Actions ejecuta `curator.py`.
-3.  **Procesamiento:** Para cada URL, el orquestador invoca a los módulos para extraer, enriquecer con IA y descargar los activos.
-4.  **Almacenamiento:** Los datos se guardan en la tabla `activos_curados`.
-5.  **Salida:** Una base de datos de activos curados, con metadatos enriquecidos.
+3.  **Clasificación:** La IA determina el tipo de activo de la URL (ej. `ARTICULO_TEXTO`).
+4.  **Extracción Especializada:** Se invoca la función de procesamiento correspondiente al tipo de activo, usando un prompt específico para extraer los metadatos relevantes.
+5.  **Almacenamiento Relacional:** Los datos se guardan de forma estructurada: un registro en `activos` y los metadatos correspondientes en `metadata_articulos` (o la tabla que corresponda).
+6.  **Salida:** Una base de datos normalizada de activos curados, clasificados y con metadatos de alta calidad.
 
 ## Herramientas de Utilidad
 
 ### `download_all_images.py`
 
 **Propósito:**
-Esta herramienta sirve para descargar en lote las imágenes de todos los activos que ya han sido curados y guardados en la base de datos. El flujo de trabajo normal solo descarga la imagen de las nuevas URLs que procesa; este script es para poblar tu carpeta local con las imágenes de *todo* tu histórico de activos. Es ideal para preparar el lanzamiento de una web o para análisis de imágenes locales.
-
-**Funcionamiento Detallado:**
-1.  **Conexión Segura:** Inicia una conexión con la base de datos de Supabase.
-2.  **Búsqueda Inteligente:** No descarga todo ciegamente. Busca únicamente los activos que tienen una `url_imagen_original` registrada pero cuya `ruta_imagen_local` está vacía (`null`). Esto asegura que solo descarga las imágenes que faltan.
-3.  **Bucle de Descarga:** Itera sobre cada activo pendiente y realiza las siguientes acciones:
-    *   Descarga la imagen desde la `url_imagen_original`.
-    *   La guarda en la carpeta `output_images`.
-    *   Nombra el archivo de imagen usando el `id` único del activo (ej: `42.jpg`), asegurando que no haya conflictos y que cada imagen esté directamente asociada a su activo.
-4.  **Actualización de la Base de Datos:** Una vez que la imagen se ha descargado correctamente, el script actualiza la fila del activo en la tabla `activos_curados`, rellenando el campo `ruta_imagen_local` con la ruta del archivo recién guardado (ej: `output_images/42.jpg`).
+Esta herramienta sirve para descargar en lote las imágenes de todos los activos de tipo artículo que ya han sido curados. Es ideal para preparar el lanzamiento de una web o para análisis de imágenes locales.
 
 **Uso:**
-Este script se ejecuta manualmente desde tu entorno local. Asegúrate de tener las dependencias instaladas (`pip install -r requirements.txt`) y las variables de entorno (`.env`) configuradas.
-
 ```bash
 # Desde la carpeta raíz del proyecto (runa_github_pages)
 python download_all_images.py
@@ -50,9 +45,11 @@ python download_all_images.py
 
 ## Configuración y Uso del Workflow
 
-1.  **Secretos de GitHub:** Asegúrate de que los siguientes secretos están configurados en tu repositorio:
+1.  **¡IMPORTANTE! Migración a v3.0:** Esta versión introduce cambios estructurales en la base de datos. Antes de la primera ejecución, debes limpiar las tablas antiguas. Conéctate a tu base de datos de Supabase y ejecuta el script SQL proporcionado en la comunicación del hito v3.0.
+
+2.  **Secretos de GitHub:** Asegúrate de que los siguientes secretos están configurados en tu repositorio:
     *   `SUPABASE_URL`
     *   `SUPABASE_SERVICE_KEY`
     *   `GEMINI_API_KEY`
 
-2.  **Ejecución:** Para procesar nuevas URLs, activa el workflow "Curador de Activos" desde la pestaña "Actions" de tu repositorio.
+3.  **Ejecución:** Para procesar nuevas URLs, activa el workflow "Curador de Activos" desde la pestaña "Actions" de tu repositorio.
