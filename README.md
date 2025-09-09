@@ -45,7 +45,19 @@ python download_all_images.py
 
 ## Configuración y Uso del Workflow
 
-1.  **¡IMPORTANTE! Migración a v3.0:** Esta versión introduce cambios estructurales en la base de datos. Antes de la primera ejecución, debes limpiar las tablas antiguas. Conéctate a tu base de datos de Supabase y ejecuta el script SQL proporcionado en la comunicación del hito v3.0.
+1.  **¡IMPORTANTE! Migración a v3.0:** Esta versión introduce cambios estructurales en la base de datos. Antes de la primera ejecución, debes limpiar las tablas antiguas para permitir que la nueva estructura se cree correctamente. Conéctate a tu base de datos de Supabase y ejecuta el siguiente script SQL:
+
+    ```sql
+    -- Script de limpieza para la transición a v3.0
+    -- Elimina la tabla dependiente primero para evitar errores.
+    DROP TABLE IF EXISTS public.encuestas_anonimas;
+
+    -- Elimina las tablas de la arquitectura v2.0 y v3.0 para un inicio limpio.
+    DROP TABLE IF EXISTS public.metadata_articulos;
+    DROP TABLE IF EXISTS public.metadata_imagenes;
+    DROP TABLE IF EXISTS public.activos_curados; -- Tabla antigua
+    DROP TABLE IF EXISTS public.activos;       -- Nueva tabla central
+    ```
 
 2.  **Secretos de GitHub:** Asegúrate de que los siguientes secretos están configurados en tu repositorio:
     *   `SUPABASE_URL`
