@@ -1,4 +1,3 @@
 supabase
-psycopg2-binary
 requests
 beautifulsoup4

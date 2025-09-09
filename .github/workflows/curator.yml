@@ -1,12 +1,12 @@
-# Workflow para el Curador de Activos Digitales de Runa
+# Workflow para el Curador de Activos Digitales de Runa (v2.0)
 
 name: Curador de Activos
 
 on:
-  # 1. Disparador manual
+  # Disparador manual
   workflow_dispatch:
 
-  # 2. Disparador automático en cada push a la rama main
+  # Disparador automático en cada push a la rama main
   push:
     branches:
       - main
@@ -35,8 +35,7 @@ jobs:
 
       - name: Ejecutar el script curador
         env:
-          # CORRECCIÓN: Pasar el set completo y correcto de secretos que el script necesita
+          # Pasamos los únicos dos secretos que el nuevo script necesita
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
         run: python curator.py
