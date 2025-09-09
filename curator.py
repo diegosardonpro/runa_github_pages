@@ -66,8 +66,8 @@ def main():
                     local_image_path = content_processor.download_image(image_url, master_asset_id, IMAGES_OUTPUT_DIR, log)
                     if local_image_path:
                         # Actualizar la tabla de metadatos con la ruta local
-                        supabase.table(db_manager.METADATA_ARTICLES_TABLE)
-                            .update({'ruta_imagen_local': local_image_path})
+                        supabase.table(db_manager.METADATA_ARTICLES_TABLE)\
+                            .update({'ruta_imagen_local': local_image_path})\
                             .eq('asset_id', master_asset_id).execute()
 
                 # --- 3d. Finalizar y marcar como completado ---
