@@ -10,8 +10,8 @@ from supabase import create_client, Client
 from src.utils.logger import get_logger
 
 # --- CONFIGURACIÓN ---
-RUN_ID = str(uuid.uuid4())[:8]
-LOGGER = get_logger(f"curator-{RUN_ID}")
+# v1.1: Forzar trigger
+LOGGER = get_logger(__name__)
 URLS_TABLE = 'urls_para_procesar'
 ASSETS_TABLE = 'activos_curados'
 IMAGES_OUTPUT_DIR = 'output_images'
