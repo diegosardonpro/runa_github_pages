@@ -76,9 +76,9 @@ def setup_database_schema(supabase: Client, logger):
         clean_schema_sql = SCHEMA_SQL.replace("\n", " ")
         sql_function = f'CREATE OR REPLACE FUNCTION {function_name}() RETURNS void AS $$ BEGIN {clean_schema_sql} END; $$ LANGUAGE plpgsql;'
         
-        supabase.rpc('eval', {{'query': sql_function}}).execute()
-        supabase.rpc(function_name, {{}}).execute()
-        supabase.rpc('eval', {{'query': f'DROP FUNCTION {function_name};'}}).execute()
+        supabase.rpc('eval', {'query': sql_function}).execute()
+        supabase.rpc(function_name, {}).execute()
+        supabase.rpc('eval', {'query': f'DROP FUNCTION {function_name};'}).execute()
         
         logger.info("Schema y políticas de seguridad verificados/creados con éxito.")
     except Exception as e:
