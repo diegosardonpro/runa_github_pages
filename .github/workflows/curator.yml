@@ -11,15 +11,10 @@ on:
     branches:
       - main
     paths:
-      # Ejecutar si cambia el código del curador, las dependencias o el propio workflow
       - 'curator.py'
       - 'src/**'
       - 'requirements.txt'
       - '.github/workflows/curator.yml'
-
-  # 3. Opcional: Ejecución programada
-  # schedule:
-  #   - cron: '0 * * * *' # Cada hora
 
 jobs:
   run_curator:
@@ -40,7 +35,8 @@ jobs:
 
       - name: Ejecutar el script curador
         env:
+          # CORRECCIÓN: Pasar el set completo y correcto de secretos que el script necesita
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
         run: python curator.py
