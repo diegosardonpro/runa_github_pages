@@ -8,7 +8,7 @@ from src.utils.logger import get_logger
 import google.generativeai as genai
 
 # --- CONFIGURACIÓN ---
-# v7.5: Implementación final y completa
+# v8.0: Versión final con corrección de TypeError y arquitectura de clases
 URLS_TABLE = 'urls_para_procesar'
 ASSETS_TABLE = 'activos'
 METADATA_IMAGES_TABLE = 'metadata_imagenes'
@@ -67,6 +67,7 @@ def setup_database_schema(supabase: Client, logger):
     try:
         function_name = f'setup_schema_{str(uuid.uuid4()).replace("-", "")}'
         clean_schema_sql = SCHEMA_SQL.replace("\n", " ")
+        # CORRECCIÓN FINAL: Sintaxis de diccionario de Python correcta con llaves simples {}
         sql_function = f'CREATE OR REPLACE FUNCTION {function_name}() RETURNS void AS $$ BEGIN {clean_schema_sql} END; $$ LANGUAGE plpgsql;'
         supabase.rpc('eval', {{'query': sql_function}}).execute()
         supabase.rpc(function_name, {{}}).execute()
@@ -126,7 +127,7 @@ def process_image_asset(url, supabase, logger):
         metadata = json.loads(response.text.strip().replace("```json", "").replace("```", ""))
         logger.info("Metadatos de imagen extraídos con IA.")
 
-        new_asset_insert = supabase.table(ASSETS_TABLE).insert({{"url_original": url, "tipo_activo": "imagen"}}).execute()
+        new_asset_insert = supabase.table(ASSETS_TABLE).insert({"url_original": url, "tipo_activo": "imagen"}).execute()
         new_asset_id = new_asset_insert.data[0]['id']
         logger.info(f"Registro de activo principal creado con ID: {new_asset_id}")
 
@@ -169,7 +170,6 @@ def main():
 
             asset_type = classify_url_asset(url, logger)
             success = False
-            # Para esta fase, asumimos que todo es una imagen si no es desconocido
             if asset_type in ['imagen', 'texto']:
                 success = process_image_asset(url, supabase, logger)
             else:

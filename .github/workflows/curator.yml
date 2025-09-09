@@ -32,11 +32,12 @@ jobs:
         run: pytest tests/
 
       - name: Ejecutar el script curador
+        # Este paso solo se ejecuta si las pruebas del paso anterior fueron exitosas
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Añadido el secreto de Gemini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python curator.py
 
       - name: Subir Imágenes Descargadas como Artefacto
