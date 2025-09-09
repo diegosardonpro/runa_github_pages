@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runa - Justicia Económica para Proteger la Vida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-800">Runa</a>
+            <div class="hidden md:flex space-x-6">
+                <a href="index.html" class="text-gray-600 hover:text-green-700 font-semibold">Inicio</a>
+                <a href="publicaciones.html" class="text-gray-600 hover:text-green-700">Publicaciones</a>
+                <a href="nosotros.html" class="text-gray-600 hover:text-green-700">Nosotros</a>
+                <a href="contacto.html" class="text-gray-600 hover:text-green-700">Contacto</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-600 hover:text-green-700 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="index.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Inicio</a>
+            <a href="publicaciones.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Publicaciones</a>
+            <a href="nosotros.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Nosotros</a>
+            <a href="contacto.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Contacto</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-green-800 text-white">
+            <div class="container mx-auto px-6 py-24 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold leading-tight">Justicia Económica para Proteger la Vida en la Tierra</h1>
+                <p class="mt-4 text-lg text-green-200 max-w-3xl mx-auto">Un puente entre la investigación rigurosa y el movimiento popular para la justicia social y ambiental.</p>
+            </div>
+        </section>
+
+        <!-- Runa Concept -->
+        <section class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-bold text-gray-800">¿Qué es Runa?</h2>
+                <div class="w-24 h-1 bg-green-700 mx-auto mt-4 mb-6"></div>
+                <p class="max-w-3xl mx-auto text-gray-600">
+                    En la cosmovisión andina y amazónica, "Runa" representa al ser humano en profunda armonía con la naturaleza. Nuestro proyecto adopta este principio para forjar una interconexión vital entre la justicia social, la justicia ambiental y la sostenibilidad económica, traduciendo conocimiento complejo en acción transformadora.
+                </p>
+            </div>
+        </section>
+
+        <!-- Areas de Trabajo -->
+        <section class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center text-gray-800">Áreas de Trabajo</h2>
+                <div class="w-24 h-1 bg-green-700 mx-auto mt-4 mb-12"></div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-lg shadow-md text-center">
+                        <h3 class="text-xl font-bold mb-2">Lucha contra Lavado de Activos</h3>
+                        <p class="text-gray-600">Investigamos y exponemos cómo las economías ilegales socavan el capital natural y los derechos humanos.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-md text-center">
+                        <h3 class="text-xl font-bold mb-2">Participación Ciudadana</h3>
+                        <p class="text-gray-600">Empoderamos a las comunidades con datos y herramientas para la incidencia política y la defensa de sus territorios.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-md text-center">
+                        <h3 class="text-xl font-bold mb-2">Gestión de Recursos Naturales</h3>
+                        <p class="text-gray-600">Promovemos modelos de gestión sostenibles que respetan los ciclos de la naturaleza y la soberanía de los pueblos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marco Teórico -->
+        <section class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center text-gray-800">Nuestro Marco Teórico</h2>
+                <div class="w-24 h-1 bg-green-700 mx-auto mt-4 mb-12"></div>
+                <div class="grid md:grid-cols-3 gap-8 text-left">
+                    <div class="border-l-4 border-green-700 pl-6">
+                        <h3 class="text-xl font-bold mb-2">Partha Dasgupta</h3>
+                        <p class="text-gray-600">La naturaleza es nuestro capital más preciado. La economía debe medir la "riqueza inclusiva" para reflejar el verdadero bienestar, valorando la biodiversidad como un activo fundamental.</p>
+                    </div>
+                    <div class="border-l-4 border-green-700 pl-6">
+                        <h3 class="text-xl font-bold mb-2">Jason Hickel</h3>
+                        <p class="text-gray-600">La crisis climática y la desigualdad son dos caras de la misma moneda, un legado de un sistema extractivo. La justicia ambiental exige justicia económica y decolonial.</p>
+                    </div>
+                    <div class="border-l-4 border-green-700 pl-6">
+                        <h3 class="text-xl font-bold mb-2">Vandana Shiva</h3>
+                        <p class="text-gray-600">Defender la soberanía de las semillas y la agricultura local es un acto de resistencia. La biodiversidad es la base de la vida y la libertad de las comunidades.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-10 text-center">
+            <p>&copy; 2025 Runa. Todos los derechos reservados.</p>
+            <p class="mt-2 text-sm text-gray-400">Para colaboraciones o consultas, escríbenos a: <a href="mailto:contacto@runa.org" class="hover:underline">contacto@runa.org</a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('mobile-menu-button').onclick = function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        };
+    </script>
+
+</body>
+</html>
