@@ -1,3 +1,5 @@
-gspread
-google-auth-oauthlib
+requests
+beautifulsoup4
 Jinja2
+supabase-py
+psycopg2-binary

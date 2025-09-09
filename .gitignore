@@ -1,0 +1,11 @@
+# Log files
+runa_automation.log
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# IDE / Editor specific
+.vscode/
+.idea/

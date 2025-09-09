@@ -1,60 +1,73 @@
-# Nombre del Workflow
-name: Generar y Desplegar Sitio desde Google Sheets
+# Workflow de CI/CD para el Proyecto Runa v3.0 (IaC + Supabase)
 
-# Disparadores (Triggers)
+name: Orquestador de Runa (Infraestructura y Contenido)
+
 on:
-  # 1. Permite ejecutar este workflow manualmente desde la pestaña Actions de GitHub
+  # Disparador manual que permite elegir qué job ejecutar
   workflow_dispatch:
 
-  # 2. Opcional: Ejecutar el workflow en un horario programado
-  # schedule:
-  #   # Ejecutar todos los días a las 02:00 AM UTC
-  #   - cron: '0 2 * * *'
-
-  # 3. Opcional: Ejecutar si hay cambios en el script o las plantillas
-  # push:
-  #   branches:
-  #     - main
-  #   paths:
-  #     - 'builder.py'
-  #     - 'templates/**'
-  #     - '.github/workflows/publish.yml'
+  # Ejecución programada solo para el job de publicación de contenido
+  schedule:
+    - cron: '0 * * * *' # Cada hora
 
 jobs:
-  build-and-deploy:
+  # --- JOB 1: CONSTRUCCIÓN DE INFRAESTRUCTURA ---
+  build_infra:
+    name: 🏗️ Construir/Actualizar Infraestructura de BD
+    # Este job solo se ejecuta si el trigger fue manual
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Obtener el código del repositorio
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      # Paso 2: Configurar el entorno de Python
       - name: Configurar Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      # Paso 3: Instalar las dependencias de Python
-      - name: Instalar dependencias desde requirements.txt
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
 
-      # Paso 4: Ejecutar el script generador
-      - name: Ejecutar builder.py para generar archivos HTML
+      - name: Ejecutar Orquestador de Infraestructura
         env:
-          # El secreto se pasa como una variable de entorno al script
-          GCP_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: python infra_builder.py
+
+  # --- JOB 2: PUBLICACIÓN DE CONTENIDO ---
+  publish_content:
+    name: 🚀 Publicar Nuevo Contenido
+    runs-on: ubuntu-latest
+    # Este job necesita que el de infra termine si ambos se ejecutan, 
+    # pero se ejecutará siempre, incluso si 'build_infra' se salta (por ser un schedule)
+    needs: build_infra
+    if: always()
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar Publicador de Contenido
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python builder.py
 
-      # Paso 5: Hacer commit y push de los cambios al repositorio (si los hay)
       - name: Commit y Push de los archivos generados
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          # Mensaje del commit
-          commit_message: 'build(automation): Regenerar sitio desde Google Sheets'
-          # Rama a la que hacer push
+          commit_message: 'build(content): Regenerar sitio con nuevos artículos'
           branch: main
-          # Patrón de archivos a incluir en el commit
           file_pattern: 'publicaciones.html publicaciones/*'
+          # Añadir el log al commit para poder depurar
+          add: 'runa_automation.log'
