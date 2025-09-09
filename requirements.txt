@@ -3,3 +3,5 @@ psycopg2-binary
 requests
 beautifulsoup4
 pytest
+google-generativeai
+python-dotenv
