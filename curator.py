@@ -10,7 +10,7 @@ from supabase import create_client, Client
 from src.utils.logger import get_logger
 
 # --- CONFIGURACIÓN ---
-# v1.3: Probar conexión con Pooler
+# v1.4: Prueba final de ciclo completo
 URLS_TABLE = 'urls_para_procesar'
 ASSETS_TABLE = 'activos_curados'
 SURVEYS_TABLE = 'encuestas_anonimas'
