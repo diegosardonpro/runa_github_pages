@@ -43,6 +43,7 @@ def main():
 
                 # --- 3b. Guardar Activo Principal ---
                 asset_payload = {
+                    'source_url_id': url_id,
                     'url_original': url,
                     'titulo': processed_data.get('titulo'),
                     'resumen': processed_data.get('resumen'),
