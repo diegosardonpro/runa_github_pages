@@ -11,9 +11,10 @@ on:
     branches:
       - main
     paths:
-      # Ejecutar solo si cambia el código del curador o el propio workflow
+      # Ejecutar si cambia el código del curador, las dependencias o el propio workflow
       - 'curator.py'
       - 'src/**'
+      - 'requirements.txt'
       - '.github/workflows/curator.yml'
 
   # 3. Opcional: Ejecución programada
