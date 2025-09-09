@@ -1,6 +1,7 @@
 # src/content_processor.py
 import os
 import json
+from typing import Union
 import google.generativeai as genai
 
 # --- CONFIGURACIÓN DE IA --- 
@@ -33,7 +34,7 @@ La estructura del JSON debe ser la siguiente:
     )
     return prompt
 
-def process_url_with_ai(url: str, logger) -> dict | None:
+def process_url_with_ai(url: str, logger) -> Union[dict, None]:
     """
     Usa el modelo Gemini para realizar el scraping y enriquecimiento de una URL en un solo paso.
     Implementa una lógica de modelo primario/respaldo según la directiva.
