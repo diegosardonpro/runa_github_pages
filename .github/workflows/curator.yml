@@ -1,4 +1,4 @@
-# Workflow para el Curador de Activos Digitales de Runa (v3.0)
+# Workflow para el Curador de Activos Digitales de Runa (v3.1)
 
 name: Curador de Activos y Pruebas
 
@@ -36,5 +36,11 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python curator.py
+
+      - name: Subir Imágenes Descargadas como Artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: imagenes-curadas
+          path: output_images/

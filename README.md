@@ -6,33 +6,24 @@ Este repositorio contiene el motor de automatización para el proyecto Runa, una
 
 El objetivo de este sistema no es solo tecnológico, sino social. Busca proporcionar las herramientas para una "Investigación Anfibia", integrando y analizando información de diversas fuentes para apoyar la toma de decisiones, fortalecer la participación ciudadana y amplificar las voces de comunidades vulnerables, todo ello guiado por un estricto **[Marco Ético](MARCO_ETICO.md)**.
 
-## Arquitectura del Sistema
+## Arquitectura del Sistema (v2.0 - Basada en Clases)
 
-El sistema está diseñado con una arquitectura modular y desacoplada para garantizar su robustez, mantenibilidad y escalabilidad.
+El sistema ha evolucionado a una arquitectura polimórfica y modular que distingue entre diferentes "clases" de activos digitales.
 
-- **`curator.py` (Orquestador Principal):** Es el punto de entrada del sistema. Su única responsabilidad es orquestar el flujo de trabajo, llamando a los módulos especializados en el orden correcto.
+- **`curator.py` (Orquestador Principal):** Orquesta el flujo de "Clasificar y Procesar". Primero, usa un modelo de IA para clasificar el tipo de contenido en una URL (ej. 'imagen', 'texto'). Luego, invoca el módulo de procesamiento adecuado para esa clase de activo.
 
-- **`src/db_manager.py` (Gestor de Base de Datos):** Este módulo encapsula toda la interacción con la base de datos de Supabase. Se encarga de la creación de la infraestructura (tablas) y de todas las operaciones de lectura y escritura de datos.
+- **`src/db_manager.py`:** Gestiona la comunicación con la base de datos de Supabase, que ahora incluye una tabla central `activos` y tablas de metadatos especializadas (ej. `metadata_imagenes`).
 
-- **`src/content_processor.py` (Procesador de Contenido):** Es el "cerebro" del sistema. Contiene la lógica para:
-    1.  **Web Scraping:** Extraer texto e imágenes de URLs.
-    2.  **Enriquecimiento con IA:** Utilizar modelos de lenguaje (Gemini) para analizar el texto, generar resúmenes y proponer etiquetas (tags).
-    3.  **Gestión de Activos:** Descargar las imágenes y guardarlas localmente.
-
-- **`src/utils/logger.py` (Módulo de Logging):** Proporciona un sistema de logging centralizado para registrar cada paso del proceso, facilitando la depuración y la monitorización.
-
-- **`.github/workflows/curator.yml` (Workflow de CI/CD):** Define la automatización en GitHub Actions, que ejecuta el orquestador `curator.py` de forma manual o programada.
+- **`src/content_processor.py`:** Contiene los "cerebros" de procesamiento para cada clase de activo. Incluye funciones para extraer metadatos específicos usando prompts de IA especializados, y para gestionar tareas como la descarga de imágenes.
 
 ## Flujo de Trabajo de Curación
 
-1.  **Entrada (Input):** Un usuario añade una o más URLs a la tabla `urls_para_procesar` en la base de datos de Supabase, con el estado `pendiente`.
-2.  **Ejecución:** El workflow de GitHub Actions se activa (manual o automáticamente).
-3.  **Procesamiento:** El script `curator.py` se ejecuta:
-    a. Lee las URLs pendientes.
-    b. Para cada URL, el `content_processor` extrae el contenido, lo enriquece con IA y descarga la imagen.
-    c. El `db_manager` guarda el resultado final (texto, tags, ruta de la imagen local) en la tabla `activos_curados`.
-    d. Se actualiza el estado de la URL procesada a `completado`.
-4.  **Salida (Output):** Una base de datos estructurada y enriquecida con activos digitales curados, listos para el análisis.
+1.  **Entrada:** Se añade una URL a la tabla `urls_para_procesar`.
+2.  **Ejecución:** El workflow de GitHub Actions ejecuta `curator.py`.
+3.  **Clasificación:** El script determina el tipo de activo en la URL.
+4.  **Procesamiento Especializado:** Se ejecuta la cadena de funciones para esa clase específica (ej. para una imagen, se extraen sus metadatos visuales y se descarga).
+5.  **Almacenamiento Estructurado:** Los datos se guardan en las tablas correspondientes (`activos` y la tabla de metadatos relevante).
+6.  **Salida:** Una base de datos de activos curados, clasificados y con metadatos enriquecidos.
 
 ## Configuración y Uso
 
