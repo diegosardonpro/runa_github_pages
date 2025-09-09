@@ -1,6 +1,6 @@
 # Workflow para el Curador de Activos Digitales de Runa (v3.0)
 
-name: Curador de Activos
+name: Curador de Activos y Pruebas
 
 on:
   # Disparador manual
@@ -10,15 +10,10 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'curator.py'
-      - 'src/**'
-      - 'requirements.txt'
-      - '.github/workflows/curator.yml'
 
 jobs:
-  run_curator:
-    name: 🤖 Ejecutar Curador de Activos
+  test_and_curate:
+    name: 🧪 Pruebas y Curación de Activos
     runs-on: ubuntu-latest
 
     steps:
@@ -33,9 +28,12 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      - name: Ejecutar Pruebas con Pytest
+        run: pytest tests/
+
       - name: Ejecutar el script curador
+        # Este paso solo se ejecuta si las pruebas del paso anterior fueron exitosas
         env:
-          # Pasamos los TRES secretos que la arquitectura dual necesita
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
