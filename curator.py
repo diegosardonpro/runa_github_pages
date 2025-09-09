@@ -6,7 +6,7 @@ from src.db_manager import get_supabase_client, setup_database_schema, URLS_TABL
 from src.content_processor import scrape_article_data, enrich_with_ai, download_image
 
 # --- CONFIGURACIÓN ---
-# v5.0: Arquitectura modular final
+# v5.1: Prueba de curación de extremo a extremo
 IMAGES_OUTPUT_DIR = 'output_images'
 
 def main():
