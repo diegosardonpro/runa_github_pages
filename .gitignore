@@ -6,6 +6,9 @@ runa_automation.log
 __pycache__/
 *.pyc
 
+# Node.js dependencies
+/node_modules/
+
 # IDE / Editor specific
 .vscode/
 .idea/

@@ -62,26 +62,27 @@
             responseMessage.className = 'mt-6 text-center text-sm';
 
             try {
-                // --- LÓGICA DE CONEXIÓN CON SUPABASE EDGE FUNCTION ---
-                // Esta sección está preparada para la Fase 2.
-                // const response = await fetch('URL_DE_TU_EDGE_FUNCTION', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer TU_API_KEY_ANON' },
-                //     body: JSON.stringify({ url: url })
-                // });
+                const functionUrl = 'https://cykkvxsvxxgdaudlsjtf.supabase.co/functions/v1/submit-url';
+                const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5a2t2eHN2eHhnZGF1ZGxzanRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczOTkxNjcsImV4cCI6MjA3Mjk3NTE2N30.vWYtQ4JaL7nOPvjN0JbDD4I0-kLFrqWqjnZs92Sec5k';
 
-                // if (!response.ok) {
-                //     const errorData = await response.json();
-                //     throw new Error(errorData.error || 'Ocurrió un error en el servidor.');
-                // }
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${anonKey}`
+                    },
+                    body: JSON.stringify({ url: url })
+                });
 
-                // const result = await response.json();
-                
-                // SIMULACIÓN HASTA IMPLEMENTAR EDGE FUNCTION
-                await new Promise(resolve => setTimeout(resolve, 1500)); 
-                console.log('Simulación de envío exitoso para:', url);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ocurrió un error en el servidor.');
+                }
 
-                responseMessage.textContent = '¡URL enviada con éxito a la cola de procesamiento!';
+                const result = await response.json();
+                console.log('Respuesta del servidor:', result);
+
+                responseMessage.textContent = result.message || '¡URL enviada con éxito a la cola de procesamiento!';
                 responseMessage.classList.add('text-green-600');
                 urlInput.value = '';
 
