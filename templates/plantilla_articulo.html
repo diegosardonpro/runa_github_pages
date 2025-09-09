@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ TITULO }} - Runa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../index.html" class="text-2xl font-bold text-green-800">Runa</a>
+            <div class="hidden md:flex space-x-6">
+                <a href="../index.html" class="text-gray-600 hover:text-green-700">Inicio</a>
+                <a href="../publicaciones.html" class="text-gray-600 hover:text-green-700 font-semibold">Publicaciones</a>
+                <a href="../nosotros.html" class="text-gray-600 hover:text-green-700">Nosotros</a>
+                <a href="../contacto.html" class="text-gray-600 hover:text-green-700">Contacto</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-600 hover:text-green-700 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="../index.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Inicio</a>
+            <a href="../publicaciones.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Publicaciones</a>
+            <a href="../nosotros.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Nosotros</a>
+            <a href="../contacto.html" class="block px-6 py-2 text-sm text-gray-600 hover:bg-green-50">Contacto</a>
+        </div>
+    </header>
+
+    <main class="py-20">
+        <div class="container mx-auto px-6">
+            <article class="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-lg shadow-md">
+                <h1 class="text-3xl md:text-4xl font-bold mb-4">{{ TITULO }}</h1>
+                <p class="text-gray-500 mb-2">Por: {{ AUTOR }}</p>
+                <p class="text-gray-500 mb-6">Publicado el: {{ FECHA }}</p>
+                
+                {% if IMAGEN_URL %}
+                <img src="{{ IMAGEN_URL }}" alt="Imagen principal del artículo" class="w-full rounded-lg mb-8">
+                {% endif %}
+
+                <div class="prose prose-lg max-w-none text-gray-700">
+                    {{ CONTENIDOHTML | safe }}
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-10 text-center">
+            <p>&copy; 2025 Runa. Todos los derechos reservados.</p>
+            <p class="mt-2 text-sm text-gray-400">Para colaboraciones o consultas, escríbenos a: <a href="mailto:contacto@runa.org" class="hover:underline">contacto@runa.org</a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('mobile-menu-button').onclick = function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        };
+    </script>
+
+</body>
+</html>
