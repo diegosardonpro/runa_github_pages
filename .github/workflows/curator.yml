@@ -1,4 +1,4 @@
-# Workflow para el Curador de Activos Digitales de Runa (v3.1)
+# Workflow para el Curador de Activos Digitales de Runa (v3.2)
 
 name: Curador de Activos y Pruebas
 
@@ -32,14 +32,15 @@ jobs:
         run: pytest tests/
 
       - name: Ejecutar el script curador
-        # Este paso solo se ejecuta si las pruebas del paso anterior fueron exitosas
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_CONNECTION_STRING: ${{ secrets.SUPABASE_CONNECTION_STRING }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Añadido el secreto de Gemini
         run: python curator.py
 
       - name: Subir Imágenes Descargadas como Artefacto
+        if: success() # Solo se ejecuta si los pasos anteriores tienen éxito
         uses: actions/upload-artifact@v4
         with:
           name: imagenes-curadas
