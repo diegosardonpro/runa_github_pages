@@ -10,7 +10,6 @@ from supabase import create_client, Client
 from src.utils.logger import get_logger
 
 # --- CONFIGURACIÓN ---
-# v1.2: Forzar trigger final
 URLS_TABLE = 'urls_para_procesar'
 ASSETS_TABLE = 'activos_curados'
 SURVEYS_TABLE = 'encuestas_anonimas'
@@ -49,6 +48,9 @@ CREATE TABLE IF NOT EXISTS public.{SURVEYS_TABLE} (
     limites_acceso text
 );
 
+-- En Supabase, los permisos se gestionan con RLS y políticas.
+-- Por ahora, deshabilitamos RLS para permitir el acceso de la API key.
+-- En producción, se definirían políticas granulares.
 ALTER TABLE public.{URLS_TABLE} DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.{ASSETS_TABLE} DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.{SURVEYS_TABLE} DISABLE ROW LEVEL SECURITY;
@@ -59,17 +61,15 @@ def setup_database_schema(logger):
     logger.info("Iniciando configuración de schema de base de datos...")
     conn = None
     try:
-        db_url = os.getenv('SUPABASE_URL')
-        db_password = os.getenv('SUPABASE_DB_PASSWORD')
-        if not db_url or not db_password: raise ValueError("Secretos de BD no encontrados.")
+        # CORRECCIÓN: Usar directamente la cadena de conexión del Pooler.
+        conn_string = os.getenv('SUPABASE_CONNECTION_STRING')
+        if not conn_string:
+            raise ValueError("El secreto SUPABASE_CONNECTION_STRING no fue encontrado.")
         
-        project_ref = urlparse(db_url).hostname.split('.')[0]
-        db_host = f"db.{project_ref}.supabase.co"
-        conn_string = f"postgresql://postgres:{db_password}@{db_host}:5432/postgres"
-        
+        logger.info("Conectando a la base de datos vía Connection Pooler...")
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        logger.debug("Ejecutando SQL para crear tablas si no existen.")
+        logger.info("Ejecutando SQL para crear tablas si no existen...")
         cursor.execute(SCHEMA_SQL)
         conn.commit()
         logger.info("Schema de la base de datos verificado/creado con éxito.")
@@ -82,27 +82,24 @@ def setup_database_schema(logger):
 def get_supabase_client(logger):
     url = os.getenv('SUPABASE_URL')
     key = os.getenv('SUPABASE_SERVICE_KEY')
-    if not url or not key: raise ValueError("Secretos de Supabase no encontrados.")
-    logger.debug("Cliente de Supabase creado.")
+    if not url or not key: raise ValueError("Secretos SUPABASE_URL o SUPABASE_SERVICE_KEY no encontrados.")
+    logger.debug("Cliente de Supabase para manipulación de datos creado.")
     return create_client(url, key)
 
-# ... (Otras funciones como scrape_article_data, enrich_with_ai, download_image irían aquí)
+# ... (Otras funciones de procesamiento irían aquí)
 
-# --- LÓGICA PRINCIPAL ---
 def main():
     run_id = str(uuid.uuid4())[:8]
     logger = get_logger(f"curator-{run_id}")
 
-    logger.info("--- ======================================= ---")
     logger.info(f"--- INICIANDO EJECUCIÓN DEL CURADOR (RUN ID: {run_id}) ---")
-    logger.info("--- ======================================= ---")
     try:
         # 1. Asegurar que la infraestructura de la BD esté lista
         setup_database_schema(logger)
         supabase = get_supabase_client(logger)
 
-        # 2. Obtener lote de URLs para procesar
-        logger.info(f"Buscando URLs con estado 'pendiente' en la tabla '{URLS_TABLE}'...")
+        # 2. Lógica de procesamiento (simulada por ahora)
+        logger.info("Buscando URLs con estado 'pendiente'...")
         response = supabase.table(URLS_TABLE).select('id, url').eq('estado', 'pendiente').limit(5).execute()
         urls_to_process = response.data
 
@@ -110,16 +107,7 @@ def main():
             logger.info("No hay nuevas URLs para procesar. Finalizando ejecución.")
         else:
             logger.info(f"Se encontraron {len(urls_to_process)} URLs para procesar.")
-            logger.debug(f"URLs a procesar: {[item['url'] for item in urls_to_process]}")
-            
-            ids_in_process = [item['id'] for item in urls_to_process]
-            supabase.table(URLS_TABLE).update({'estado': 'en_proceso'}).in_('id', ids_in_process).execute()
-            logger.debug(f"Marcando IDs {ids_in_process} como 'en_proceso'.")
-
-            # 3. Procesar cada URL (Simulación)
-            for item in urls_to_process:
-                # ... (lógica de procesamiento simulada)
-                pass
+            # ... (resto de la lógica de procesamiento)
 
     except Exception as e:
         logger.error(f"Ha ocurrido un error fatal en el script: {e}", exc_info=True)
