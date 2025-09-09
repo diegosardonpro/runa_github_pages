@@ -38,3 +38,20 @@ La tecnología es neutral; su aplicación define su ética. La diferencia entre 
 *   **Uso Adecuado (Nuestro Enfoque):** Invitar a una persona a participar voluntariamente en un estudio social. Le explicamos el "porqué", le damos el control total para participar o no, y utilizamos sus datos anónimos para generar un bien común: la visibilización de la desigualdad para poder combatirla.
 
 Este marco es un documento vivo y guiará todas nuestras decisiones técnicas futuras.
+
+---
+
+## 4. Análisis de Plataformas y Proveedores
+
+Esta sección documenta nuestro análisis de las políticas y límites de las tecnologías de terceros que utilizamos, asegurando que se alineen con nuestros principios.
+
+### 4.1 Supabase (Backend y Base de Datos)
+
+*   **Fecha de Análisis:** 2025-09-09
+*   **Servicio Analizado:** Política de uso de datos para las funcionalidades de IA de Supabase.
+*   **Conclusión:** La política de Supabase es **compatible** con nuestro Marco Ético.
+*   **Análisis Detallado:**
+    *   **Seguridad por Defecto:** Por defecto, Supabase no comparte ningún dato de contenido con sus proveedores de IA, solo metadatos del esquema de la base de datos (nombres de tablas/columnas), lo cual es una práctica segura.
+    *   **Consentimiento Explícito:** El uso compartido de datos de contenido (prompts, datos de filas) para funciones de IA requiere una activación manual y explícita por parte del administrador del proyecto (nosotros). Tenemos el control total.
+    *   **Prohibición de Re-entrenamiento:** Supabase y sus proveedores de IA se comprometen a no retener los datos de contenido y a no utilizarlos para entrenar sus modelos. Los datos se usan únicamente para generar la respuesta a una consulta y luego se descartan.
+*   **Implicación para Runa:** Podemos utilizar las herramientas de IA de Supabase en el futuro con la confianza de que nuestros datos y los de nuestros usuarios no serán explotados o utilizados para fines ajenos a nuestra misión. La responsabilidad de activar cualquier compartición de datos recae en nosotros, y solo lo haríamos si se alinea con nuestros principios de transparencia y valor para el usuario.

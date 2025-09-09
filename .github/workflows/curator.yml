@@ -3,12 +3,22 @@
 name: Curador de Activos
 
 on:
-  # Disparador manual
+  # 1. Disparador manual
   workflow_dispatch:
 
-  # Opcional: Ejecución programada cada hora
+  # 2. Disparador automático en cada push a la rama main
+  push:
+    branches:
+      - main
+    paths:
+      # Ejecutar solo si cambia el código del curador o el propio workflow
+      - 'curator.py'
+      - 'src/**'
+      - '.github/workflows/curator.yml'
+
+  # 3. Opcional: Ejecución programada
   # schedule:
-  #   - cron: '0 * * * *'
+  #   - cron: '0 * * * *' # Cada hora
 
 jobs:
   run_curator:
