@@ -1,4 +1,4 @@
-# curator.py (v2.0 - Orquestador)
+# curator.py (v2.1 - IA-Driven)
 import os
 import uuid
 from src.utils import logger
@@ -35,32 +35,28 @@ def main():
             db_manager.update_url_status(supabase, log, url_id, 'en_proceso')
 
             try:
-                # --- 3a. Extraer Contenido ---
-                scraped_data = content_processor.scrape_article_data(url, log)
-                if not scraped_data:
-                    raise ValueError("El scraping inicial falló o no devolvió datos.")
+                # --- 3a. Procesamiento Unificado con IA ---
+                # Se delega tanto el scraping como el enriquecimiento a la IA en un solo paso.
+                processed_data = content_processor.process_url_with_ai(url, log)
+                if not processed_data:
+                    raise ValueError("El procesamiento con IA falló o no devolvió datos.")
 
-                # --- 3b. Enriquecer con IA ---
-                enriched_data = content_processor.enrich_with_ai(scraped_data['text'], log)
-                if not enriched_data:
-                    raise ValueError("El enriquecimiento con IA falló o no devolvió datos.")
-
-                # --- 3c. Guardar Activo Principal ---
+                # --- 3b. Guardar Activo Principal ---
                 asset_payload = {
                     'url_original': url,
-                    'titulo': scraped_data.get('title'),
-                    'resumen': enriched_data.get('resumen'),
-                    'contenido_html': enriched_data.get('contenido_html'),
-                    'tags': enriched_data.get('tags'),
-                    'url_imagen_original': scraped_data.get('image_url')
+                    'titulo': processed_data.get('titulo'),
+                    'resumen': processed_data.get('resumen'),
+                    'contenido_html': processed_data.get('contenido_html'),
+                    'tags': processed_data.get('tags'),
+                    'url_imagen_original': processed_data.get('url_imagen_original')
                 }
                 new_asset = db_manager.save_curated_asset(supabase, log, asset_payload)
                 if not new_asset:
                     raise ValueError("Falló el guardado del activo curado en la base de datos.")
 
-                # --- 3d. Descargar Imagen (si existe) ---
+                # --- 3c. Descargar Imagen (si existe) ---
                 local_image_path = content_processor.download_image(
-                    scraped_data.get('image_url'), 
+                    processed_data.get('url_imagen_original'), 
                     new_asset['id'], 
                     IMAGES_OUTPUT_DIR, 
                     log
@@ -69,7 +65,7 @@ def main():
                     # Actualizar el activo con la ruta de la imagen local
                     supabase.table(db_manager.ASSETS_TABLE).update({'ruta_imagen_local': local_image_path}).eq('id', new_asset['id']).execute()
 
-                # --- 3e. Marcar como Completado ---
+                # --- 3d. Marcar como Completado ---
                 db_manager.update_url_status(supabase, log, url_id, 'completado')
                 processed_count += 1
                 log.info(f"URL ID {url_id} procesada y curada con éxito.")
