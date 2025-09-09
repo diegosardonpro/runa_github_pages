@@ -65,19 +65,30 @@ def get_supabase_client(logger):
 def setup_database_schema(supabase: Client, logger):
     logger.info("Verificando/creando schema de base de datos...")
     try:
+        # Usamos un nombre de función único para evitar colisiones en ejecuciones paralelas.
         function_name = f'setup_schema_{str(uuid.uuid4()).replace("-", "")}'
-        clean_schema_sql = SCHEMA_SQL.replace("\n", " ")
-        # CORRECCIÓN FINAL: Sintaxis de diccionario de Python correcta con llaves simples {}
-        sql_function = f'CREATE OR REPLACE FUNCTION {function_name}() RETURNS void AS $$ BEGIN {clean_schema_sql} END; $$ LANGUAGE plpgsql;'
-        supabase.rpc('eval', {{'query': sql_function}}).execute()
-        supabase.rpc(function_name, {{}}).execute()
-        supabase.rpc('eval', {{'query': f'DROP FUNCTION {function_name};'}}).execute()
+        
+        # Limpiamos el SQL para que sea una sola línea dentro de la función plpgsql.
+        clean_schema_sql = ' '.join(SCHEMA_SQL.split())
+
+        # 1. Crear una función SQL temporal que ejecute nuestro bloque de schema.
+        #    La sintaxis de diccionario correcta en Python es con llaves simples: {'key': 'value'}.
+        sql_function_creation = f'CREATE OR REPLACE FUNCTION {function_name}() RETURNS void AS $ BEGIN {clean_schema_sql} END; $ LANGUAGE plpgsql;'
+        supabase.rpc('eval', {'query': sql_function_creation}).execute()
+
+        # 2. Ejecutar la función recién creada.
+        supabase.rpc(function_name, {}).execute()
+
+        # 3. Eliminar la función temporal para mantener la base de datos limpia.
+        supabase.rpc('eval', {'query': f'DROP FUNCTION {function_name};'}).execute()
+        
         logger.info("Schema y políticas de seguridad verificados/creados con éxito.")
     except Exception as e:
+        # Manejo de errores para idempotencia: si el schema ya existe, no es un error.
         if "already exists" in str(e) or "already has RLS" in str(e) or "already enabled" in str(e):
-            logger.info("La infraestructura base ya existe.")
+            logger.info("La infraestructura base (tablas, RLS) ya existe. No se requieren cambios.")
         else:
-            logger.error(f"Error al configurar el schema: {e}", exc_info=True)
+            logger.error(f"Error al configurar el schema de la base de datos: {e}", exc_info=True)
             raise
 
 def classify_url_asset(url, logger):
