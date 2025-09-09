@@ -1,8 +1,16 @@
-# curator.py (v3.0 - Arquitectura Normalizada)
+# curator.py (v3.2.1 - Carga de Entorno Corregida)
+
+# --- Carga de Entorno --- 
+# Debe ser lo primero que se ejecuta para que las variables estén disponibles para los otros módulos.
+from dotenv import load_dotenv
+load_dotenv()
+
+# --- Importaciones del Módulo ---
 import os
 import uuid
 from src.utils import logger
 from src import db_manager, content_processor
+
 
 # --- CONSTANTES ---
 IMAGES_OUTPUT_DIR = 'output_images'
@@ -54,29 +62,56 @@ def main():
 
                 # --- 3c. Procesamiento especializado según el tipo ---
                 if asset_type == 'ARTICULO_TEXTO':
-                    # Extraer metadatos y enlaces
+                    # 1. Extraer metadatos del artículo (incluyendo URLs de imágenes)
                     metadata = content_processor.extract_article_metadata(url, log)
                     if not metadata:
                         raise ValueError("La extracción de metadatos del artículo falló.")
+
+                    # 2. Separar metadatos del artículo de las URLs de imágenes
+                    image_urls = metadata.pop('urls_imagenes', [])
                     
-                    # La IA devuelve los enlaces en una clave separada
-                    links_data = metadata.pop('enlaces', None)
-                    
-                    # Guardar metadatos principales del artículo
+                    # 3. Guardar los metadatos principales del artículo (título, resumen, etc.)
                     db_manager.save_article_metadata(supabase, log, master_asset_id, metadata)
+                    log.info(f"Metadatos del artículo para Asset ID {master_asset_id} guardados.")
 
-                    # Guardar enlaces extraídos en su propia tabla
-                    if links_data:
-                        db_manager.save_extracted_links(supabase, log, master_asset_id, links_data)
+                    # 4. Procesar las imágenes encontradas (máximo 5)
+                    log.info(f"Se encontraron {len(image_urls)} imágenes. Procesando las primeras 5...")
+                    for i, image_url in enumerate(image_urls[:5]):
+                        log.info(f"Procesando imagen {i+1}/5: {image_url[:100]}...")
+                        try:
+                            # 4a. Analizar la imagen con IA de Visión
+                            vision_data = content_processor.analyze_image_with_vision(image_url, log)
+                            if not vision_data:
+                                log.warning(f"El análisis de visión para {image_url} no devolvió datos.")
+                                continue
 
-                    # Descargar imagen asociada al artículo
-                    image_url = metadata.get('url_imagen_extraida')
-                    local_image_path = content_processor.download_image(image_url, master_asset_id, IMAGES_OUTPUT_DIR, log)
-                    if local_image_path:
-                        # Actualizar la tabla de metadatos con la ruta local
-                        supabase.table(db_manager.METADATA_ARTICLES_TABLE)\
-                            .update({'ruta_imagen_local': local_image_path})\
-                            .eq('asset_id', master_asset_id).execute()
+                            # 4b. Descargar el archivo de la imagen
+                            local_path = content_processor.download_image(
+                                image_url=image_url,
+                                asset_id=master_asset_id,
+                                image_order=i,
+                                output_dir=IMAGES_OUTPUT_DIR,
+                                logger=log
+                            )
+                            if not local_path:
+                                log.warning(f"No se pudo descargar la imagen {image_url}.")
+                                # Continuamos para al menos guardar los metadatos de la IA si se generaron
+                            
+                            # 4c. Guardar toda la información en la base de datos
+                            image_metadata_to_save = {
+                                'asset_id': master_asset_id,
+                                'url_original_imagen': image_url,
+                                'ruta_local': local_path,
+                                'tags_visuales_ia': vision_data.get('tags_visuales_ia'),
+                                'descripcion_ia': vision_data.get('descripcion_ia'),
+                                'orden_aparicion': i
+                            }
+                            db_manager.save_image_metadata(supabase, log, image_metadata_to_save)
+                            log.info(f"Metadatos de la imagen {i+1} guardados en la base de datos.")
+
+                        except Exception as img_exc:
+                            log.error(f"Error procesando la imagen {image_url}: {img_exc}", exc_info=True)
+                            # No detenemos el bucle principal, solo esta imagen falla
 
                 # --- 3d. Finalizar y marcar como completado ---
                 db_manager.update_asset_status(supabase, log, master_asset_id, 'completado')
