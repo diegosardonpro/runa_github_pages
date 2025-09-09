@@ -1,0 +1,35 @@
+# Workflow para el Curador de Activos Digitales de Runa
+
+name: Curador de Activos
+
+on:
+  # Disparador manual
+  workflow_dispatch:
+
+  # Opcional: Ejecución programada cada hora
+  # schedule:
+  #   - cron: '0 * * * *'
+
+jobs:
+  run_curator:
+    name: 🤖 Ejecutar Curador de Activos
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar el script curador
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: python curator.py
