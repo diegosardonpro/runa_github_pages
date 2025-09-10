@@ -42,7 +42,7 @@ def main():
                 if not asset_type or asset_type not in SUPPORTED_ASSET_TYPES:
                     raise ValueError(f"Tipo de activo no soportado: {asset_type}")
 
-                asset_response = supabase.table('activos').insert({'source_url_id': url_id, 'asset_type': asset_type, 'url_original': url}).select('id').execute()
+                asset_response = supabase.table('activos').insert({'source_url_id': url_id, 'asset_type': asset_type, 'url_original': url}, returning="representation").execute()
                 master_asset_id = asset_response.data[0]['id']
 
                 if asset_type == 'ARTICULO_TEXTO':
