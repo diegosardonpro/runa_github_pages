@@ -73,17 +73,25 @@ def get_supabase_client(logger):
     return create_client(url, key)
 
 def setup_database_schema(supabase: Client, logger):
-    logger.info("Verificando/creando schema de base de datos v3.2...")
+    logger.info("Verificando/creando schema de base de datos v3.2.2...")
     try:
-        # Primero, ejecutar el schema principal con "IF NOT EXISTS"
+        # 1. Ejecutar el schema principal con "IF NOT EXISTS"
         supabase.rpc('eval', {'query': SCHEMA_SQL}).execute()
         logger.info("Schema base (tablas, etc.) verificado/creado con éxito.")
 
-        # Despues, asegurar columnas específicas para evitar errores de schema cache
-        # Esto actua como una mini-migración para asegurar que la columna exista.
-        alter_table_sql = f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS orden_aparicion smallint;"
-        supabase.rpc('eval', {'query': alter_table_sql}).execute()
-        logger.info(f"Columna 'orden_aparicion' asegurada en la tabla {METADATA_IMAGES_TABLE}.")
+        # 2. Migración/Corrección: Asegurar que el schema de la BD coincida con el del código.
+        logger.info(f"Asegurando estructura de la tabla {METADATA_IMAGES_TABLE}...")
+        migration_sqls = [
+            # Añadir columnas si no existen
+            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS tags_visuales_ia text;",
+            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS descripcion_ia text;",
+            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS orden_aparicion smallint;",
+            # Eliminar la restricción UNIQUE obsoleta de asset_id si existe
+            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} DROP CONSTRAINT IF EXISTS metadata_imagenes_asset_id_key;"
+        ]
+        for sql in migration_sqls:
+            supabase.rpc('eval', {'query': sql}).execute()
+        logger.info(f"Toda la estructura para el schema v3.2.2 ha sido asegurada.")
 
     except Exception as e:
         if "already exists" in str(e): logger.info("Las tablas ya existen.")
@@ -139,6 +147,20 @@ def get_pending_urls(supabase: Client, logger, limit: int = 5):
     except Exception as e:
         logger.error(f"Error al obtener URLs pendientes: {e}", exc_info=True)
         return []
+
+def add_url_if_not_exists(supabase: Client, logger, url: str):
+    """Inserta una nueva URL en la tabla de procesamiento si no existe ya."""
+    try:
+        # Upsert intenta insertar. Si la URL ya existe (gracias a la restricción UNIQUE),
+        # no hace nada. Es la forma más eficiente de evitar duplicados.
+        supabase.table(URLS_TABLE).upsert({
+            'url': url,
+            'estado': 'pendiente'
+        }, on_conflict='url').execute()
+        # No es necesario loguear cada inserción exitosa para no generar ruido.
+    except Exception as e:
+        logger.error(f"Error al intentar añadir la URL {url}: {e}", exc_info=True)
+
 
 def update_url_status(supabase: Client, logger, url_id: int, estado: str, error: str = None):
     logger.info(f"Actualizando URL ID {url_id} a estado '{estado}'...")

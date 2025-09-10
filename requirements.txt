@@ -5,3 +5,5 @@ google-generativeai
 python-dotenv
 pytest
 beautifulsoup4
+feedparser
+playwright

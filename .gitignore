@@ -15,3 +15,10 @@ __pycache__/
 
 # Secrets
 .env
+
+# Archivos de salida
+/output_images/
+
+# Archivos temporales de guardado de página web
+src/Informaci*ns_files/
+src/Informaci*.html

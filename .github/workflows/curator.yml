@@ -28,6 +28,9 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      - name: Instalar Navegadores de Playwright
+        run: playwright install --with-deps
+
       - name: Ejecutar Pruebas con Pytest
         run: pytest tests/
 

@@ -62,20 +62,21 @@ def main():
 
                 # --- 3c. Procesamiento especializado según el tipo ---
                 if asset_type == 'ARTICULO_TEXTO':
-                    # 1. Extraer metadatos del artículo (incluyendo URLs de imágenes)
+                    # 1. Extraer metadatos del artículo (incluyendo URLs de imágenes y HTML)
                     metadata = content_processor.extract_article_metadata(url, log)
                     if not metadata:
                         raise ValueError("La extracción de metadatos del artículo falló.")
 
-                    # 2. Separar metadatos del artículo de las URLs de imágenes
+                    # 2. Separar metadatos, URLs de imágenes y el contenido HTML
                     image_urls = metadata.pop('urls_imagenes', [])
+                    article_html = metadata.get('contenido_html') # Obtenemos el HTML para el análisis avanzado
                     
-                    # 3. Guardar los metadatos principales del artículo (título, resumen, etc.)
+                    # 3. Guardar los metadatos principales del artículo
                     db_manager.save_article_metadata(supabase, log, master_asset_id, metadata)
                     log.info(f"Metadatos del artículo para Asset ID {master_asset_id} guardados.")
 
                     # 4. Procesar las imágenes encontradas (máximo 5)
-                    log.info(f"Se encontraron {len(image_urls)} imágenes. Procesando las primeras 5...")
+                    log.info(f"Se encontraron {len(image_urls)} imágenes. Procesando las primeras 5 con análisis HTML...")
                     for i, image_url in enumerate(image_urls[:5]):
                         log.info(f"Procesando imagen {i+1}/5: {image_url[:100]}...")
                         try:
@@ -83,25 +84,24 @@ def main():
                             vision_data = content_processor.analyze_image_with_vision(image_url, log)
                             if not vision_data:
                                 log.warning(f"El análisis de visión para {image_url} no devolvió datos.")
-                                continue
+                                # No continuamos, pero guardaremos un registro sin datos de IA
+                                vision_data = {}
 
-                            # 4b. Descargar el archivo de la imagen
+                            # 4b. Descargar el archivo de la imagen (con la nueva lógica de análisis HTML)
                             local_path = content_processor.download_image(
                                 image_url=image_url,
+                                article_html=article_html, # Pasamos el HTML completo
                                 asset_id=master_asset_id,
                                 image_order=i,
                                 output_dir=IMAGES_OUTPUT_DIR,
                                 logger=log
                             )
-                            if not local_path:
-                                log.warning(f"No se pudo descargar la imagen {image_url}.")
-                                # Continuamos para al menos guardar los metadatos de la IA si se generaron
                             
                             # 4c. Guardar toda la información en la base de datos
                             image_metadata_to_save = {
                                 'asset_id': master_asset_id,
                                 'url_original_imagen': image_url,
-                                'ruta_local': local_path,
+                                'ruta_local': local_path, # Será None si la descarga falló
                                 'tags_visuales_ia': vision_data.get('tags_visuales_ia'),
                                 'descripcion_ia': vision_data.get('descripcion_ia'),
                                 'orden_aparicion': i
