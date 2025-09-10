@@ -1,0 +1,29 @@
+name: Run Runa Curator
+
+on:
+  workflow_dispatch: # Permite la ejecución manual desde la pestaña Actions
+  schedule:
+    # Se ejecuta al inicio de cada hora (minuto 0)
+    - cron: '0 * * * *'
+
+jobs:
+  curate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install -r runa_github_pages/requirements.txt
+
+      - name: Run Curator
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python runa_github_pages/curator.py
