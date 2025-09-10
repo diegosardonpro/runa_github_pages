@@ -87,7 +87,7 @@ def setup_database_schema(supabase: Client, logger):
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS tags_visuales_ia text;",
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS descripcion_ia text;",
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS orden_aparicion smallint;",
-            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS url_almacenamiento text;", -- NUEVA COLUMNA
+            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS url_almacenamiento text;",
             # Eliminar la restricción UNIQUE obsoleta de asset_id si existe
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} DROP CONSTRAINT IF EXISTS metadata_imagenes_asset_id_key;"
         ]
