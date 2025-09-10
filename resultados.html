@@ -66,17 +66,16 @@
 
         async function loadResults() {
             try {
-                // Consulta para obtener los artículos y sus imágenes asociadas
+                // CORRECCIÓN: La consulta ahora empieza desde 'activos' que es la tabla central.
                 const { data, error } = await supabase
-                    .from('metadata_articulos')
+                    .from('activos')
                     .select(`
-                        titulo,
-                        resumen,
-                        tags,
-                        activos ( url_original ),
+                        url_original,
+                        metadata_articulos ( titulo, resumen, tags ),
                         metadata_imagenes ( url_almacenamiento, descripcion_ia, tags_visuales_ia )
                     `)
-                    .order('id', { ascending: false })
+                    .eq('estado_curacion', 'completado')
+                    .order('created_at', { ascending: false })
                     .limit(20);
 
                 if (error) throw error;
@@ -88,22 +87,28 @@
                     return;
                 }
 
-                for (const article of data) {
-                    const firstImage = article.metadata_imagenes.find(img => img.url_almacenamiento);
+                for (const asset of data) {
+                    // CORRECCIÓN: Acceder a los datos a través de la estructura anidada correcta.
+                    const articleData = asset.metadata_articulos;
+                    const imageData = asset.metadata_imagenes;
+
+                    if (!articleData) continue; // Omitir si no hay metadatos de artículo
+
+                    const firstImage = imageData ? imageData.find(img => img.url_almacenamiento) : null;
                     const imageUrl = firstImage ? firstImage.url_almacenamiento : 'https://via.placeholder.com/300x200.png?text=Sin+Imagen';
 
                     const card = document.createElement('div');
                     card.className = 'col-md-6 col-lg-4';
                     card.innerHTML = `
                         <div class="card h-100 asset-card">
-                            <img src="${imageUrl}" class="card-img-top asset-img" alt="${article.titulo}">
+                            <img src="${imageUrl}" class="card-img-top asset-img" alt="${articleData.titulo}">
                             <div class="card-body">
-                                <h5 class="card-title">${article.titulo}</h5>
-                                <p class="card-text">${article.resumen.substring(0, 100)}...</p>
-                                <p class="card-text"><small class="text-muted">Tags: ${article.tags}</small></p>
+                                <h5 class="card-title">${articleData.titulo}</h5>
+                                <p class="card-text">${articleData.resumen ? articleData.resumen.substring(0, 100) : ''}...</p>
+                                <p class="card-text"><small class="text-muted">Tags: ${articleData.tags ? articleData.tags : 'N/A'}</small></p>
                             </div>
                             <div class="card-footer">
-                                <a href="${article.activos.url_original}" class="btn btn-sm btn-outline-secondary" target="_blank">Ver Artículo Original</a>
+                                <a href="${asset.url_original}" class="btn btn-sm btn-outline-secondary" target="_blank">Ver Artículo Original</a>
                             </div>
                         </div>
                     `;
