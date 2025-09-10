@@ -149,17 +149,20 @@ def get_pending_urls(supabase: Client, logger, limit: int = 5):
         return []
 
 def add_url_if_not_exists(supabase: Client, logger, url: str):
-    """Inserta una nueva URL en la tabla de procesamiento si no existe ya."""
+    """
+    Inserta una nueva URL si no existe, o la encuentra si ya existe.
+    Siempre devuelve el registro completo de la URL.
+    """
     try:
-        # Upsert intenta insertar. Si la URL ya existe (gracias a la restricción UNIQUE),
-        # no hace nada. Es la forma más eficiente de evitar duplicados.
-        supabase.table(URLS_TABLE).upsert({
+        # Upsert con returning='representation' para que devuelva el registro.
+        response = supabase.table(URLS_TABLE).upsert({
             'url': url,
             'estado': 'pendiente'
-        }, on_conflict='url').execute()
-        # No es necesario loguear cada inserción exitosa para no generar ruido.
+        }, on_conflict='url', returning='representation').execute()
+        return response
     except Exception as e:
-        logger.error(f"Error al intentar añadir la URL {url}: {e}", exc_info=True)
+        logger.error(f"Error al hacer upsert con la URL {url}: {e}", exc_info=True)
+        return None
 
 
 def update_url_status(supabase: Client, logger, url_id: int, estado: str, error: str = None):
