@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Panel Runa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-100 h-full flex items-center justify-center">
+    <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 m-4">
+        <h1 class="text-3xl font-bold text-indigo-600 text-center">Panel de Curación de Runa</h1>
+        <form id="curation-form" class="mt-8 space-y-6">
+            <input id="url-input" type="url" required class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="https://...">
+            <button id="submit-btn" type="submit" class="w-full flex justify-center py-3 px-4 border rounded-lg text-white bg-indigo-600 hover:bg-indigo-700">Enviar</button>
+        </form>
+        <div id="status-message" class="mt-6 text-center text-sm min-h-[20px]"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CONFIGURACIÓN --- 
+            // RELLENA ESTAS DOS LÍNEAS EN TU COPIA LOCAL (panel.local.html)
+            const SUPABASE_URL = "TU_URL_DE_SUPABASE_AQUI";
+            const SUPABASE_ANON_KEY = "TU_CLAVE_ANON_PUBLICA_AQUI";
+            // ---------------------
+
+            const curationForm = document.getElementById('curation-form');
+            const urlInput = document.getElementById('url-input');
+            const statusMessage = document.getElementById('status-message');
+            let supabaseClient;
+
+            function showMessage(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.className = `mt-6 text-center text-sm min-h-[20px] ${isError ? 'text-red-600' : 'text-green-600'}`;
+            }
+
+            try {
+                if (!SUPABASE_URL || SUPABASE_URL.includes('AQUI')) throw new Error("Las credenciales no están configuradas en el archivo HTML.");
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } catch (e) {
+                showMessage(e.message, true);
+                return;
+            }
+
+            curationForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const url = urlInput.value.trim();
+                if (!url) { showMessage('Por favor, ingresa una URL.', true); return; }
+
+                try {
+                    const { error } = await supabaseClient.from('urls_para_procesar').insert({ url: url, estado: 'pendiente' });
+                    if (error) throw error;
+                    showMessage('¡URL enviada a la cola con éxito!', false);
+                    urlInput.value = '';
+                } catch (error) {
+                    showMessage(`Error: ${error.message}`, true);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
