@@ -94,11 +94,23 @@ def main():
                         output_dir=IMAGES_OUTPUT_DIR,
                         logger=log
                     )
+
+                    # Subir a Supabase Storage
+                    storage_url = None
+                    if local_path:
+                        storage_url = content_processor.upload_image_to_storage(
+                            supabase_client=supabase,
+                            local_path=local_path,
+                            asset_id=master_asset_id,
+                            image_order=i,
+                            logger=log
+                        )
                     
                     image_metadata_to_save = {
                         'asset_id': master_asset_id,
                         'url_original_imagen': image_url,
                         'ruta_local': local_path,
+                        'url_almacenamiento': storage_url,
                         'tags_visuales_ia': vision_data.get('tags_visuales_ia'),
                         'descripcion_ia': vision_data.get('descripcion_ia'),
                         'orden_aparicion': i

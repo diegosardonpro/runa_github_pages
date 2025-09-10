@@ -21,4 +21,4 @@ __pycache__/
 
 # Archivos temporales de guardado de página web
 src/Informaci*ns_files/
-src/Informaci*.html
+src/Informaci*.html*_files/ 

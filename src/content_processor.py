@@ -9,6 +9,9 @@ from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import httpx
 
+# Cliente de Supabase (necesario para la carga de archivos)
+from supabase import Client as SupabaseClient
+
 # Cliente de IA
 import google.generativeai as genai
 
@@ -186,3 +189,40 @@ def download_image(image_url: str, article_html: str, asset_id: int, image_order
 
     logger.error(f"Todos los intentos de descarga para {image_url} fallaron.")
     return None
+
+# --- FUNCIÓN DE CARGA A SUPABASE STORAGE ---
+BUCKET_NAME = "runa-asset-images"
+
+def upload_image_to_storage(supabase_client: SupabaseClient, local_path: str, asset_id: int, image_order: int, logger) -> str | None:
+    """Sube un archivo local al bucket de Supabase Storage y devuelve la URL pública."""
+    if not local_path or not os.path.exists(local_path):
+        logger.error(f"El archivo local no existe y no se puede subir: {local_path}")
+        return None
+
+    try:
+        file_ext = os.path.splitext(local_path)[1]
+        remote_path = f"asset_{asset_id}/{asset_id}_{image_order}{file_ext}"
+        
+        logger.info(f"Subiendo imagen a Supabase Storage en la ruta: {remote_path}")
+        
+        with open(local_path, 'rb') as f:
+            # La función 'upload' de supabase-py v1 no devuelve nada.
+            # La v2 devuelve la URL, pero nos aseguramos compatibilidad.
+            supabase_client.storage.from_(BUCKET_NAME).upload(
+                path=remote_path,
+                file=f,
+                file_options={"cache-control": "3600", "upsert": "true"} # Sobrescribe si ya existe
+            )
+
+        logger.info("Carga a Storage completada. Obteniendo URL pública...")
+        
+        # Obtener la URL pública
+        response = supabase_client.storage.from_(BUCKET_NAME).get_public_url(remote_path)
+        
+        public_url = response
+        logger.info(f"URL pública obtenida: {public_url}")
+        return public_url
+
+    except Exception as e:
+        logger.error(f"Error al subir el archivo a Supabase Storage: {e}", exc_info=True)
+        return None

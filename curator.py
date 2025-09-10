@@ -87,21 +87,33 @@ def main():
                                 # No continuamos, pero guardaremos un registro sin datos de IA
                                 vision_data = {}
 
-                            # 4b. Descargar el archivo de la imagen (con la nueva lógica de análisis HTML)
+                            # 4b. Descargar el archivo de la imagen
                             local_path = content_processor.download_image(
                                 image_url=image_url,
-                                article_html=article_html, # Pasamos el HTML completo
+                                article_html=article_html,
                                 asset_id=master_asset_id,
                                 image_order=i,
                                 output_dir=IMAGES_OUTPUT_DIR,
                                 logger=log
                             )
+
+                            # 4c. Subir la imagen a Supabase Storage
+                            storage_url = None
+                            if local_path:
+                                storage_url = content_processor.upload_image_to_storage(
+                                    supabase_client=supabase,
+                                    local_path=local_path,
+                                    asset_id=master_asset_id,
+                                    image_order=i,
+                                    logger=log
+                                )
                             
-                            # 4c. Guardar toda la información en la base de datos
+                            # 4d. Guardar toda la información en la base de datos
                             image_metadata_to_save = {
                                 'asset_id': master_asset_id,
                                 'url_original_imagen': image_url,
-                                'ruta_local': local_path, # Será None si la descarga falló
+                                'ruta_local': local_path, # Puede ser None si la descarga falló
+                                'url_almacenamiento': storage_url, # Puede ser None si la carga falló
                                 'tags_visuales_ia': vision_data.get('tags_visuales_ia'),
                                 'descripcion_ia': vision_data.get('descripcion_ia'),
                                 'orden_aparicion': i

@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS public.{METADATA_IMAGES_TABLE} (
     asset_id bigint NOT NULL REFERENCES public.{ASSETS_TABLE}(id) ON DELETE CASCADE, -- Ya no es UNIQUE
     url_original_imagen text NOT NULL,
     ruta_local text,
+    url_almacenamiento text, -- NUEVA COLUMNA PARA LA URL PÚBLICA DE SUPABASE STORAGE
     tags_visuales_ia text,
     descripcion_ia text,
     orden_aparicion smallint -- Para saber en qué orden aparece en el artículo
@@ -86,6 +87,7 @@ def setup_database_schema(supabase: Client, logger):
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS tags_visuales_ia text;",
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS descripcion_ia text;",
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS orden_aparicion smallint;",
+            f"ALTER TABLE public.{METADATA_IMAGES_TABLE} ADD COLUMN IF NOT EXISTS url_almacenamiento text;", -- NUEVA COLUMNA
             # Eliminar la restricción UNIQUE obsoleta de asset_id si existe
             f"ALTER TABLE public.{METADATA_IMAGES_TABLE} DROP CONSTRAINT IF EXISTS metadata_imagenes_asset_id_key;"
         ]
