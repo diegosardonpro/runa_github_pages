@@ -48,11 +48,13 @@ def main():
                 if asset_type == 'ARTICULO_TEXTO':
                     metadata = content_processor.extract_article_metadata(url, log)
                     if not metadata: raise ValueError("Extracción de metadatos falló.")
+
+                    # SOLUCIÓN: Separar las URLs de las imágenes antes de actualizar la tabla de activos
+                    image_urls = metadata.pop('urls_imagenes', [])
                     
                     supabase.table('activos').update(metadata).eq('id', master_asset_id).execute()
                     log.info(f"Metadatos del artículo guardados para Asset ID {master_asset_id}.")
 
-                    image_urls = metadata.get('urls_imagenes', [])
                     article_html = metadata.get('contenido_html')
                     for i, image_url in enumerate(image_urls):
                         try:
