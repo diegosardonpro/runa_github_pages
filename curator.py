@@ -42,6 +42,14 @@ def main():
             
             master_asset_id = None
             try:
+                # --- INICIO DE LIMPIEZA --- 
+                # Para asegurar que la ejecución sea idempotente, borramos cualquier activo existente para esta URL.
+                # La BD está configurada para borrar en cascada las imágenes asociadas.
+                log.info(f"Limpiando registros antiguos para URL ID {url_id} antes de procesar...")
+                supabase.table(db_manager.ASSETS_TABLE).delete().eq('source_url_id', url_id).execute()
+                log.info("Limpieza completada.")
+                # --- FIN DE LIMPIEZA ---
+
                 asset_response = supabase.table(db_manager.ASSETS_TABLE).insert({'source_url_id': url_id, 'url_original': url}, returning="representation").execute()
                 master_asset_id = asset_response.data[0]['id']
 
