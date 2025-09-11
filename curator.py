@@ -29,7 +29,7 @@ def main():
             log.info("Se ha solicitado la configuración del schema de la base de datos.")
             db_manager.setup_database_schema(supabase, log)
             log.info("Configuración del schema finalizada.")
-        return
+            return # Terminar después de la configuración
 
     try:
         urls_to_process = supabase.table(db_manager.URLS_TABLE).select('id, url').eq('estado', 'pendiente').execute().data
