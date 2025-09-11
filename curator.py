@@ -42,7 +42,7 @@ def main():
             
             master_asset_id = None
             try:
-                asset_response = supabase.table(db_manager.ASSETS_TABLE).insert({'source_url_id': url_id, 'asset_type': 'ARTICULO_TEXTO', 'url_original': url}, returning="representation").execute()
+                asset_response = supabase.table(db_manager.ASSETS_TABLE).insert({'source_url_id': url_id, 'url_original': url}, returning="representation").execute()
                 master_asset_id = asset_response.data[0]['id']
 
                 metadata = content_processor.extract_article_metadata(url, log)
@@ -55,27 +55,59 @@ def main():
                 supabase.table(db_manager.ASSETS_TABLE).update(metadata).eq('id', master_asset_id).execute()
                 log.info(f"Metadatos del artículo guardados para Asset ID {master_asset_id}.")
 
-                for i, image_url in enumerate(image_urls):
+                # Aplicar la restricción de procesar solo las primeras 5 imágenes
+                image_urls_limitadas = image_urls[:5]
+                log.info(f"Se encontraron {len(image_urls)} imágenes en el artículo. Procesando las primeras {len(image_urls_limitadas)} según la directiva.")
+
+                # Importar json para procesar la respuesta de la IA
+                import json
+
+                for i, image_url in enumerate(image_urls_limitadas):
                     try:
-                        vision_data = content_processor.analyze_image_with_vision(image_url, log) or {}
-                        description = vision_data.get('descripcion_ia', '').lower()
-                        if any(keyword in description for keyword in ['logo', 'icono', 'banner']):
-                            log.warning(f"Imagen descartada por filtro de IA: {image_url}")
+                        # CAPA 3: Analizar primero con la IA para la clasificación final
+                        vision_analysis_json = content_processor.analyze_image_with_vision(image_url, log)
+                        
+                        if not vision_analysis_json:
+                            log.warning(f"El análisis de visión no devolvió nada para {image_url}. Se omite.")
                             continue
 
-                        absolute_image_url = content_processor.build_absolute_url(url, image_url)
-                        local_path = content_processor.download_image(absolute_image_url, IMAGES_OUTPUT_DIR, master_asset_id, i, log)
+                        # Parsear la respuesta JSON del modelo
+                        vision_data = json.loads(vision_analysis_json)
+
+                        # Tomar la decisión final basada en la clasificación de la IA
+                        if not vision_data.get('es_relevante') or vision_data.get('tipo') in ['logo_o_banner', 'irrelevante']:
+                            log.info(f"Capa 3: Imagen descartada por filtro de IA (tipo: {vision_data.get('tipo')}, relevante: {vision_data.get('es_relevante')}): {image_url}")
+                            continue
+
+                        # Si pasa el filtro, procedemos a descargar y guardar
+                        log.info(f"Imagen APROBADA por la IA. Procediendo a descargar: {image_url}")
+                        
+                        local_path = content_processor.download_image(
+                            base_url=url, 
+                            image_url=image_url, 
+                            article_html=article_html,
+                            asset_id=master_asset_id, 
+                            image_order=i, 
+                            output_dir=IMAGES_OUTPUT_DIR, 
+                            logger=log
+                        )
                         
                         storage_url = None
                         if local_path:
                             storage_url = content_processor.upload_image_to_storage(supabase, local_path, master_asset_id, i, log)
                         
+                        # Guardar metadatos usando la información del JSON de la IA
                         supabase.table(db_manager.IMAGES_TABLE).insert({
-                            'asset_id': master_asset_id, 'url_original_imagen': image_url,
+                            'asset_id': master_asset_id,
+                            'url_original_imagen': image_url,
                             'url_almacenamiento': storage_url,
-                            'descripcion_ia': vision_data.get('descripcion_ia'), 'tags_visuales_ia': vision_data.get('tags_visuales_ia'),
+                            'descripcion_ia': vision_data.get('descripcion_ia'),
+                            'tags_visuales_ia': vision_data.get('tipo'), # Usamos el 'tipo' como tag principal
                             'orden_aparicion': i
                         }).execute()
+
+                    except json.JSONDecodeError as json_err:
+                        log.error(f"Error al parsear JSON de la IA para {image_url}: {json_err}")
                     except Exception as img_exc:
                         log.error(f"Error procesando imagen {image_url}: {img_exc}")
 
