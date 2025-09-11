@@ -64,30 +64,12 @@ def get_supabase_client(logger):
         raise ValueError("Secretos de Supabase no encontrados.")
     return create_client(url, key)
 
-def setup_database_schema(logger):
-    logger.info("Iniciando configuración de schema de base de datos v9.0 (Final)...")
-    conn = None
-    last_exception = None
-    for attempt in range(3):
-        try:
-            conn_string = os.getenv('SUPABASE_CONNECTION_STRING')
-            if not conn_string: raise ValueError("El secreto SUPABASE_CONNECTION_STRING no fue encontrado.")
-            
-            logger.info(f"Conectando a la base de datos (Intento {attempt + 1}/3)...")
-            conn = psycopg2.connect(conn_string)
-            cursor = conn.cursor()
-            logger.info("Ejecutando SQL para resetear y crear el schema final...")
-            cursor.execute(SCHEMA_SQL)
-            conn.commit()
-            logger.info("Schema v9.0 (re)creado con éxito.")
-            return
-        except psycopg2.OperationalError as e:
-            logger.warning(f"Intento {attempt + 1} fallido. Reintentando en 5 segundos...")
-            last_exception = e
-            time.sleep(5)
-        except Exception as e:
-            logger.error(f"Error al configurar el schema de la BD: {e}", exc_info=True)
-            raise
-        finally:
-            if conn: conn.close()
-    if last_exception: raise last_exception
+def setup_database_schema(supabase: Client, logger):
+    logger.info("Iniciando configuración de schema de base de datos v9.1 (Final Simplificado)...")
+    try:
+        logger.info("Ejecutando SQL para resetear y crear el schema final...")
+        supabase.rpc('eval', {'query': SCHEMA_SQL}).execute()
+        logger.info("Schema v9.1 (re)creado con éxito.")
+    except Exception as e:
+        logger.error(f"Error al configurar el schema de la BD: {e}", exc_info=True)
+        raise

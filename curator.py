@@ -26,9 +26,9 @@ def main():
     supabase = db_manager.get_supabase_client(log)
 
     if args.setup_db:
-        log.info("Se ha solicitado la configuración del schema de la base de datos.")
-        db_manager.setup_database_schema(log)
-        log.info("Configuración del schema finalizada.")
+            log.info("Se ha solicitado la configuración del schema de la base de datos.")
+            db_manager.setup_database_schema(supabase, log)
+            log.info("Configuración del schema finalizada.")
         return
 
     try:
