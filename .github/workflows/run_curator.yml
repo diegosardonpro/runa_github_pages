@@ -1,10 +1,10 @@
 name: Run Runa Curator
 
 on:
-  workflow_dispatch: # Permite la ejecución manual desde la pestaña Actions
+  workflow_dispatch: # Permite la ejecución manual
   schedule:
-    # Se ejecuta al inicio de cada hora (minuto 0)
-    - cron: '0 * * * *'
+    # Se ejecuta cada 30 minutos
+    - cron: '*/30 * * * *'
 
 jobs:
   curate:
