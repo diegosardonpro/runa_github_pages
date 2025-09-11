@@ -55,8 +55,8 @@ def main():
                 supabase.table(db_manager.ASSETS_TABLE).update(metadata).eq('id', master_asset_id).execute()
                 log.info(f"Metadatos del artículo guardados para Asset ID {master_asset_id}.")
 
-                # Aplicar la restricción de procesar solo las primeras 5 imágenes
-                image_urls_limitadas = image_urls[:5]
+                # Aplicar la restricción de procesar solo las primeras 10 imágenes
+                image_urls_limitadas = image_urls[:10]
                 log.info(f"Se encontraron {len(image_urls)} imágenes en el artículo. Procesando las primeras {len(image_urls_limitadas)} según la directiva.")
 
                 # Importar json para procesar la respuesta de la IA
@@ -85,7 +85,6 @@ def main():
                         local_path = content_processor.download_image(
                             base_url=url, 
                             image_url=image_url, 
-                            article_html=article_html,
                             asset_id=master_asset_id, 
                             image_order=i, 
                             output_dir=IMAGES_OUTPUT_DIR, 
