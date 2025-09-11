@@ -3,8 +3,8 @@ name: Run Runa Curator
 on:
   workflow_dispatch: # Permite la ejecución manual desde la pestaña Actions
   schedule:
-    # Se ejecuta cada 30 minutos
-    - cron: '*/30 * * * *'
+    # Se ejecuta cada 15 minutos
+    - cron: '*/15 * * * *'
 
 jobs:
   curate:
@@ -19,7 +19,6 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        # CORRECCIÓN: La ruta es directa, sin el prefijo de la carpeta
         run: pip install -r requirements.txt
 
       - name: Run Curator
@@ -27,5 +26,4 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        # CORRECCIÓN: La ruta es directa, sin el prefijo de la carpeta
         run: python curator.py
