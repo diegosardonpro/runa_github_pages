@@ -1,4 +1,4 @@
-# src/content_processor.py (v3.8.5 - Stable Syntax)
+# src/content_processor.py (v3.9 - Humanization Attempt)
 import os
 import json
 import re
@@ -32,7 +32,10 @@ def extract_article_metadata(url: str, logger) -> dict | None:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
-            page.goto(url, wait_until='domcontentloaded', timeout=90000)
+            # Usar networkidle y una espera más larga para intentar superar retos de seguridad
+            page.goto(url, wait_until='networkidle', timeout=90000)
+            logger.info("Página cargada. Esperando 15s a posible reto de seguridad (Cloudflare)...")
+            page.wait_for_timeout(15000)
             
             logger.info("Iniciando desplazamiento para forzar carga de contenido dinámico...")
             scroll_height = page.evaluate("document.body.scrollHeight")
@@ -108,7 +111,6 @@ def extract_article_metadata(url: str, logger) -> dict | None:
         for script in scripts:
             if script.string:
                 try:
-                    # Regex simplificado para máxima estabilidad
                     found_urls = re.findall(r'https?://\S+\.(?:jpg|jpeg|png|gif|webp)', script.string)
                     if found_urls:
                         content_images.extend(found_urls)
@@ -154,13 +156,7 @@ def analyze_image_with_vision(image_url: str, logger) -> str | None:
 
         model = genai.GenerativeModel(VISION_MODEL)
         system_prompt = "Eres un experto analista de contenido visual para un medio periodístico. Tu tarea es analizar una imagen y clasificar su propósito dentro de un artículo. Responde únicamente con un objeto JSON válido sin formato adicional."
-        user_prompt = f'''Analiza la imagen. Clasifícala según uno de los siguientes tipos: "fotografia_principal", "grafico_o_diagrama", "captura_de_pantalla", "logo_o_banner", "irrelevante". Determina si es relevante para el contenido principal. La descripción debe ser concisa (máximo 15 palabras).
-
-Formato de respuesta JSON requerido:
-{{
-  "tipo": "uno de los tipos válidos",
-  "es_relevante": true/false,
-  "descripcion_ia": "Una descripción concisa de la imagen."
+        user_prompt = f'''Analiza la imagen. Clasifícala según uno de los siguientes tipos: "fotografia_principal", "grafico_o_diagrama", "captura_de_pantalla", "logo_o_banner", "irrelevante". Determina si es relevante para el contenido principal. La descripción debe ser concisa (máximo 15 palabras).\n\nFormato de respuesta JSON requerido:\n{{\n  "tipo": "uno de los tipos válidos",\n  "es_relevante": true/false,\n  "descripcion_ia": "Una descripción concisa de la imagen."
 }}'''
 
         with httpx.Client(follow_redirects=True) as client:
